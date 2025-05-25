@@ -23,7 +23,7 @@ async def get_cluster(cluster):
             if responce.status == 200:
                 ans = await responce.json()
                 for cluster_info in ans["clusters"]:
-                    if cluster_info["name"] == cluster:
+                    if cluster_info["name"][0] == cluster[0]:
                         capacity = cluster_info["capacity"]
                         available = capacity - cluster_info["availableCapacity"]
                         return (capacity, cluster_info["availableCapacity"], available)

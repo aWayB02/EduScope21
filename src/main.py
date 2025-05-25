@@ -1,56 +1,95 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters.command import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import (
+    CallbackQuery,
+    Message,
+)
 from api.clusters import get_cluster
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from api.participant import get_participant_login
+from api.participant import get_participant_info
+
+from buttons import main_menu, cluster
 
 bot = Bot(token="7696341778:AAFr1VqDVfIKTqsvp6nguvQpFGjSnpDDjZk")
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
 
-def main_menu():
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Кластеры", callback_data="open_cluster")],
-            [InlineKeyboardButton(text="Найти пользователя", callback_data="get_user")],
-        ]
-    )
-
-
 class GetUserInput(StatesGroup):
     waiting_for_text = State()
-
-
-def cluster():
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Denal", callback_data="cluster:D")],
-            [InlineKeyboardButton(text="Ezdel", callback_data="cluster:E")],
-            [InlineKeyboardButton(text="Sabar", callback_data="cluster:S")],
-            [InlineKeyboardButton(text="Tesham", callback_data="cluster:T")],
-            [InlineKeyboardButton(text="Назад", callback_data="back")],
-        ]
-    )
 
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
-        f"Peer to Peer {message.from_user.first_name}!", reply_markup=main_menu()
+        f"Peer to Peer {message.from_user.first_name}! 🍐", reply_markup=main_menu()
     )
 
 
 @dp.message(GetUserInput.waiting_for_text)
 async def get_user_info(message: types.Message, state: FSMContext):
-    login = message.text
-    ans = await get_participant_login(login)
-    await message.answer((str(ans)))
+    login = message.text.lower()
+    data = await get_participant_info(login)
+    if not data:
+        await message.answer("Пользователь не найден:(", reply_markup=main_menu())
+        await state.clear()
+        return
+    login, className, parallelName = (
+        data["login"],
+        data["className"],
+        data["parallelName"],
+    )
+    expValue, level, expToNextLevel = (
+        data["expValue"],
+        data["level"],
+        data["expToNextLevel"],
+    )
+    coalitionName, rank, coins = data["name"], data["rank"], data["coins"]
+    if "active" in data:
+        await message.answer(
+            f"Логин: <b>{login} 👤</b>\n"
+            f"Поток: <b>{className}</b>\n"
+            f"Cтатус обучения: <b>{parallelName}</b> ✅\n"
+            f"Xp: <b>{expValue}</b>\n"
+            f"Level: <b>{level}</b> 📈\n"
+            f"XpToNextLevel: <b>{expToNextLevel}</b>\n"
+            f"Coins: <b>{coins}</b> 💸\n"
+            f"Трайб: <b>{coalitionName}</b>\n"
+            f"Место в трайбе: <b>{rank}</b> 📊\n"
+            f"Локация: Отсутствует в кампусе❌",
+            parse_mode="HTML",
+            reply_markup=main_menu(),
+        )
+        await state.clear()
+        return
+    clusterName = data["clusterName"]
+    row = data["row"]
+    number = data["number"]
+    await message.answer(
+        f"Логин: <b>{login} 👤</b>\n"
+        f"Поток: <b>{className}</b>\n"
+        f"Cтатус обучения: <b>{parallelName}</b> ✅\n"
+        f"Xp: <b>{expValue}</b>\n"
+        f"Level: <b>{level}</b> 📈\n"
+        f"XpToNextLevel: <b>{expToNextLevel}</b>\n"
+        f"Coins: <b>{coins}</b> 💸\n"
+        f"Трайб: <b>{coalitionName}</b>\n"
+        f"Место в трайбе: <b>{rank}</b> 📊\n"
+        f"Локация: <b>{clusterName} | ряд {row} | Место {number}</b>\n",
+        parse_mode="HTML",
+        reply_markup=main_menu(),
+    )
     await state.clear()
+
+
+@dp.message(F.text)
+async def is_no_valid_input(message: Message):
+    await message.answer_sticker(
+        "CAACAgIAAxkBAAIBmmgzbIEOenYtcwzYNbCPPI35g_RZAAIldQACtRZ4STRZWNqBgPpLNgQ"
+    )
 
 
 @dp.callback_query(F.data == "get_user")
@@ -69,14 +108,19 @@ async def get_open_cluster(callback: CallbackQuery):
 @dp.callback_query(F.data.startswith("cluster:"))
 async def get_cluster_info(callback: CallbackQuery):
     name = callback.data.split(":")[-1]
-    names_clusters = {"D": "Denal", "E": "Ezdel", "S": "Sabar", "T": "Tesham"}
-    info = await get_cluster(names_clusters[name])
-    total_places, free_places, occupied_places = info
+    names_clusters = {
+        "D": ("Denal", 3),
+        "E": ("Ezdel", 2),
+        "S": ("Sabar", 3),
+        "T": ("Tesham", 2),
+    }
+    data = await get_cluster(names_clusters[name][0])
+    total_places, free_places, occupied_places = data
     await callback.message.answer(
-        f"Кластер <b>{names_clusters[name]}</b>\n"
-        f"всего мест: <b>{total_places}</b>\n"
-        f"свободных мест: <b>{free_places}</b>\n"
-        f"занятых мест: <b>{occupied_places}</b>",
+        f"Кластер: <b>{names_clusters[name][0]} | Этаж: {names_clusters[name][1]}</b>\n"
+        f"Рабочих станций всего: <b>{total_places} 🟢</b>\n"
+        f"Доступные станции: <b>{free_places} 🆓</b>\n"
+        f"Используемые станции: <b>{occupied_places} 🧑🏻‍💻</b>",
         parse_mode="HTML",
         reply_markup=cluster(),
     )
