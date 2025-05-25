@@ -29,16 +29,3 @@ async def get_cluster(cluster):
                         return (capacity, cluster_info["availableCapacity"], available)
 
             # записываем в лог
-
-
-# import asyncio
-
-
-# async def main():
-#     result = await get_clusters()
-#     from pprint import pprint
-
-#     pprint(result)
-
-
-# asyncio.run(main())
