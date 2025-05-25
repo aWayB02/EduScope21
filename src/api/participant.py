@@ -3,11 +3,10 @@ import aiohttp.client_exceptions
 from dotenv import load_dotenv
 import os
 
-
 load_dotenv()
 
 
-async def get_participant_login(login):
+async def get_participant_login(login) -> dict:
     """
     returns information about the users
     """
@@ -21,12 +20,18 @@ async def get_participant_login(login):
             if responce.status == 200:
 
                 ans = await responce.json()
+                coalition_info = await get_coalition_info(login)
+                ans.update(coalition_info)
                 return ans
 
             # записываем лог
 
 
-async def get_participant_workstation(login):
+async def get_participant_workstation(login) -> dict:
+    """
+    returns information about the participant's of workstation
+    """
+
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
     url = (
         "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
@@ -42,6 +47,29 @@ async def get_participant_workstation(login):
                     ans = await responce.json()
                     return ans
                 except aiohttp.client_exceptions.ContentTypeError:
-                    return "Пользователь не на месте."
+                    return {"active": False}
+
+            # записываем лог
+
+
+async def get_coalition_info(login):
+    """
+    returns coalition info about participant
+    """
+
+    headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
+    url = (
+        "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
+        + login
+        + "/coalition"
+    )
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as responce:
+
+            if responce.status == 200:
+
+                ans = await responce.json()
+                return ans
 
             # записываем лог
