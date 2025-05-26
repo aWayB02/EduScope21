@@ -51,7 +51,7 @@ async def get_participant_workstation(login) -> dict:
                     ans = await responce.json()
                     return ans
                 except aiohttp.client_exceptions.ContentTypeError:
-                    return {"active": "Нет на месте"}
+                    return {"active": False}
 
             # записываем лог
 

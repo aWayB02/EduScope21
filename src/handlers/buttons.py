@@ -1,4 +1,3 @@
-from aiogram.filters.command import Command
 from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
