@@ -5,7 +5,7 @@ from aiogram.types import (
     CallbackQuery,
 )
 from handlers.buttons import cluster
-from api.clusters import get_cluster
+from core.clusters import get_cluster
 from handlers.buttons import main_menu
 
 router = Router()
