@@ -5,9 +5,9 @@ from aiogram import types, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from api.participant import get_participant_info
+from core.participant import get_participant_info
 from .dispatcher import dp
-from .user_interface.validate_user import send_info_participant, training_status
+from .utils import send_info_participant, training_status
 
 router = Router()
 
