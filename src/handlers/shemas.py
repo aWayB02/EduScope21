@@ -14,9 +14,9 @@ class Participant(BaseModel):
     level: int
     expToNextLevel: int
     active: Optional[bool] = None
-    clusterName: str = None
-    row: str = None
-    number: int = None
-    rank: int = None
-    campus: dict = None
-    coalitionId: int = None
+    clusterName: Optional[str] = None
+    row: Optional[str] = None
+    number: Optional[int] = None
+    rank: Optional[int] = None
+    campus: Optional[dict] = None
+    coalitionId: Optional[int] = None

@@ -1,6 +1,7 @@
 from aiogram.types import Message
 from handlers.buttons import main_menu
 from .shemas import Participant
+from pydantic import validate_call
 
 
 def training_status(status):
@@ -22,80 +23,98 @@ tribes = {
 }
 
 
-async def send_info_participant(status, message: Message, data: dict):
-    from pprint import pprint
+@validate_call
+def template_participant(key, personality: Participant):
 
-    pprint(data)
+    participant = {
+        "login": f"Логин: <b>{personality.login}</b>\n",
+        "flow": f"Поток: <b>{personality.className}</b> 📆\n",
+        "statusOfTraining": f"statusOfTraining: <b>{parallelName_status[personality.parallelName]}</b>\n",
+        "exp": f"exp: <b>{personality.expValue}</b> 🎯\n",
+        "level": f"level: <b>{personality.level}</b> ⚡️\n",
+        "expToTheNextLevel": f"expToTheNextLevel: <b>{personality.expToNextLevel}</b> 📈\n",
+        "coins": f"coins: <b>{personality.coins}</b> 💸\n",
+        "tribe": f"tribe: <b>{tribes.get(personality.name, personality.name)}</b>\n",
+        "peerReviewPoints": f"peerReviewPoints: <b>{personality.peerReviewPoints}</b>\n",
+        "codeReviewPoints": f"codeReviewPoints: <b>{personality.codeReviewPoints}</b>\n",
+        "placeInTheTribe": f"Место в трайбе: <b>{personality.rank}</b> 📊\n",
+        "location_in_campus": f"Локация: <b>{personality.clusterName} | ряд {personality.row} | место {personality.number}</b>\n",
+        "location_not_in_campus": f"<b>Отсутствует в кампусе</b> ❌\n",
+    }
 
-    participant = Participant(**data)
+    return participant[key]
+
+
+@validate_call
+async def send_info_participant(status, message: Message, participant: Participant):
 
     if status:  # survival camp
-        if participant.active is not None:
+        if participant.active is not None:  # not in campus
             await message.answer(
-                f"Логин: <b>{participant.login}</b> 👤\n"
-                f"Поток: <b>{participant.className}</b> 📆\n"
-                f"Cтатус обучения: <b>{parallelName_status[participant.parallelName]}</b>\n"
-                f"Xp: <b>{participant.expValue}</b> 🎯\n"
-                f"Level: <b>{participant.level}</b> ⚡️\n"
-                f"Опыт до следующего уровня: <b>{participant.expToNextLevel}</b> 📈\n"
-                f"Coins: <b>{participant.coins}</b> 💸\n"
-                f"Трайб: <b>{tribes.get(participant.name, participant.name)}</b>\n"
-                f"peerReviewPoints: <b>{participant.peerReviewPoints}</b>\n"
-                f"codeReviewPoints: <b>{participant.codeReviewPoints}</b>\n"
-                f"Локация: <b>Отсутствует в кампусе</b> ❌\n",
+                f"{template_participant("login", participant)}"
+                f"{template_participant("flow", participant)}"
+                f"{template_participant("statusOfTraining", participant)}"
+                f"{template_participant("exp", participant)}"
+                f"{template_participant("level", participant)}"
+                f"{template_participant("expToTheNextLevel", participant)}"
+                f"{template_participant("coins", participant)}"
+                f"{template_participant("tribe", participant)}"
+                f"{template_participant("peerReviewPoints", participant)}"
+                f"{template_participant("codeReviewPoints", participant)}"
+                f"{template_participant("location_not_in_campus", participant)}",
                 parse_mode="HTML",
                 reply_markup=main_menu(),
             )
             return
         await message.answer(
-            f"Логин: <b>{participant.login}</b> 👤\n"
-            f"Поток: <b>{participant.className}</b> 📆\n"
-            f"Cтатус обучения: <b>{parallelName_status[participant.parallelName]}</b>\n"
-            f"Xp: <b>{participant.expValue}</b> 🎯\n"
-            f"Level: <b>{participant.level}</b> ⚡️\n"
-            f"Опыт до следующего уровня: <b>{participant.expToNextLevel}</b> 📈\n"
-            f"Coins: <b>{participant.coins}</b> 💸\n"
-            f"Трайб: <b>{tribes.get(participant.name, participant.name)}</b>\n"
-            f"peerReviewPoints: <b>{participant.peerReviewPoints}</b> 💸\n"
-            f"codeReviewPoints: <b>{participant.codeReviewPoints}</b> 💸\n"
-            f"Локация: <b>{participant.clusterName} | ряд {participant.row} | Место {participant.number}</b>\n",
+            f"{template_participant("login", participant)}"
+            f"{template_participant("flow", participant)}"
+            f"{template_participant("statusOfTraining", participant)}"
+            f"{template_participant("exp", participant)}"
+            f"{template_participant("level", participant)}"
+            f"{template_participant("expToTheNextLevel", participant)}"
+            f"{template_participant("coins", participant)}"
+            f"{template_participant("tribe", participant)}"
+            f"{template_participant("peerReviewPoints", participant)}"
+            f"{template_participant("codeReviewPoints", participant)}"
+            f"{template_participant("location_in_campus", participant)}",
             parse_mode="HTML",
             reply_markup=main_menu(),
         )
         return
 
     # Core program
-    if "active" not in data.keys():
+    if participant.active is None:  # not in campus
         await message.answer(
-            f"Логин: <b>{participant.login}</b>\n"
-            f"Поток: <b>{participant.className}</b>\n"
-            f"Cтатус обучения: <b>{parallelName_status[participant.parallelName]}</b>\n"
-            f"Xp: <b>{participant.expValue}</b> 🎯\n"
-            f"Level: <b>{participant.level}</b> ⚡️\n"
-            f"Опыт до следующего уровня: <b>{participant.expToNextLevel}</b> 📈\n"
-            f"Coins: <b>{participant.coins}</b> 💸\n"
-            f"peerReviewPoints: <b>{participant.peerReviewPoints}</b>\n"
-            f"codeReviewPoints: <b>{participant.codeReviewPoints}</b>\n"
-            f"Трайб: <b>{tribes.get(participant.name, participant.name)}</b>\n"
-            f"Место в трайбе: <b>{participant.rank}</b> 📊\n"
-            f"Локация: <b>{participant.clusterName} | ряд {participant.row} | Место {participant.number}</b>\n",
+            f"{template_participant("login", participant)}"
+            f"{template_participant("flow", participant)}"
+            f"{template_participant("statusOfTraining", participant)}"
+            f"{template_participant("exp", participant)}"
+            f"{template_participant("level", participant)}"
+            f"{template_participant("expToTheNextLevel", participant)}"
+            f"{template_participant("coins", participant)}"
+            f"{template_participant("tribe", participant)}"
+            f"{template_participant("placeInTheTribe", participant)}"
+            f"{template_participant("peerReviewPoints", participant)}"
+            f"{template_participant("codeReviewPoints", participant)}"
+            f"{template_participant("location_in_campus", participant)}",
             parse_mode="HTML",
             reply_markup=main_menu(),
         )
         return
     await message.answer(
-        f"Логин: <b>{participant.login}</b>\n"
-        f"Поток: <b>{participant.className}</b>\n"
-        f"Cтатус обучения: <b>{parallelName_status[participant.parallelName]}</b>\n"
-        f"Xp: <b>{participant.expValue}</b> 🎯\n"
-        f"Level: <b>{participant.level}</b> ⚡️\n"
-        f"Опыт до следующего уровня: <b>{participant.expToNextLevel}</b> 📈\n"
-        f"Coins: <b>{participant.coins}</b> 💸\n"
-        f"peerReviewPoints: <b>{participant.peerReviewPoints}</b>\n"
-        f"codeReviewPoints: <b>{participant.codeReviewPoints}</b>\n"
-        f"Трайб: <b>{tribes.get(participant.name, participant.name)}</b>\n"
-        f"Место в трайбе: <b>{participant.rank}</b> 📊\n"
-        f"Локация: <b>Отсутствует в кампусе</b> ❌\n",
+        f"{template_participant("login", participant)}"
+        f"{template_participant("flow", participant)}"
+        f"{template_participant("statusOfTraining", participant)}"
+        f"{template_participant("exp", participant)}"
+        f"{template_participant("level", participant)}"
+        f"{template_participant("expToTheNextLevel", participant)}"
+        f"{template_participant("coins", participant)}"
+        f"{template_participant("tribe", participant)}"
+        f"{template_participant("placeInTheTribe", participant)}"
+        f"{template_participant("peerReviewPoints", participant)}"
+        f"{template_participant("codeReviewPoints", participant)}"
+        f"{template_participant("location_not_in_campus", participant)}",
         parse_mode="HTML",
         reply_markup=main_menu(),
     )
