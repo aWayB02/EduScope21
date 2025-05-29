@@ -1,5 +1,4 @@
 import aiohttp
-import aiohttp.client_exceptions
 from dotenv import load_dotenv
 import os
 from math import ceil
@@ -13,7 +12,7 @@ async def get_participant_info(login) -> dict:
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = "https://edu-api.21-school.ru/services/21-school/api/v1/participants/" + login
+    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -25,10 +24,12 @@ async def get_participant_info(login) -> dict:
                 participant_coins = await get_participant_coins(login)
                 participant_workstation = await get_participant_workstation(login)
                 participant_logtime = await get_participant_logtime(login)
+                participant_feedback = await get_participant_feedback(login)
                 ans.update(coalition_info)
                 ans.update(participant_coins)
                 ans.update(participant_workstation)
                 ans.update({"logtime": participant_logtime})
+                ans.update(participant_feedback)
                 return ans
 
             # записываем лог
@@ -40,21 +41,17 @@ async def get_participant_workstation(login) -> dict:
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = (
-        "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
-        + login
-        + "/workstation"
-    )
+    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/workstation"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
 
             if responce.status == 200:
-                try:
-                    ans = await responce.json()
-                    return ans
-                except aiohttp.client_exceptions.ContentTypeError:
+                if "application/json " != responce.headers.get("content-type", None):
                     return {"active": False}
+
+                ans = await responce.json()
+                return ans
 
             # записываем лог
 
@@ -65,11 +62,7 @@ async def get_coalition_info(login):
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = (
-        "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
-        + login
-        + "/coalition"
-    )
+    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/coalition"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -81,6 +74,8 @@ async def get_coalition_info(login):
 
             # записываем лог
 
+            return {}
+
 
 async def get_participant_coins(login):
     """
@@ -88,11 +83,7 @@ async def get_participant_coins(login):
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = (
-        "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
-        + login
-        + "/points"
-    )
+    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/points"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -102,15 +93,13 @@ async def get_participant_coins(login):
                 ans = await responce.json()
                 return ans
 
+            return {}
+
 
 async def get_participant_logtime(login):
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = (
-        "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
-        + login
-        + "/logtime"
-    )
+    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/logtime"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -118,3 +107,21 @@ async def get_participant_logtime(login):
             if responce.status == 200:
                 ans = await responce.text()
                 return ceil(float(ans))
+
+            return {}
+
+
+async def get_participant_feedback(login):
+
+    headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
+    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/feedback"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as responce:
+
+            if responce.status == 200:
+                responce = await responce.json()
+
+                return responce
+
+            return {}

@@ -13,8 +13,7 @@ def main_menu():
                     text="Найти пользователя 🔍", callback_data="get_user"
                 )
             ],
-            [InlineKeyboardButton(text="Правила 📜", callback_data="a")],
-            [InlineKeyboardButton(text="Часто задаваемые вопросы", callback_data="v")],
+            [InlineKeyboardButton(text="Мероприятия 📅", callback_data="events")],
         ]
     )
 
