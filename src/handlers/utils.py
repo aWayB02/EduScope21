@@ -39,7 +39,8 @@ def template_participant(key, personality: Participant):
         "codeReviewPoints": f"codeReviewPoints: <b>{personality.codeReviewPoints}</b>\n",
         "placeInTheTribe": f"Место в трайбе: <b>{personality.rank}</b> 📊\n",
         "location_in_campus": f"Локация: <b>{personality.clusterName} | ряд {personality.row} | место {personality.number}</b>\n",
-        "location_not_in_campus": f"<b>Отсутствует в кампусе</b> ❌\n",
+        "location_not_in_campus": f"Локация: <b>Отсутствует в кампусе</b> ❌\n",
+        "logtime": f"Время работы за неделю (в часах): <b>{personality.logtime}</b>",
     }
 
     return participant[key]
@@ -61,7 +62,8 @@ async def send_info_participant(status, message: Message, participant: Participa
                 f"{template_participant("tribe", participant)}"
                 f"{template_participant("peerReviewPoints", participant)}"
                 f"{template_participant("codeReviewPoints", participant)}"
-                f"{template_participant("location_not_in_campus", participant)}",
+                f"{template_participant("location_not_in_campus", participant)}"
+                f"{template_participant("logtime", participant)}",
                 parse_mode="HTML",
                 reply_markup=main_menu(),
             )
@@ -78,6 +80,7 @@ async def send_info_participant(status, message: Message, participant: Participa
             f"{template_participant("peerReviewPoints", participant)}"
             f"{template_participant("codeReviewPoints", participant)}"
             f"{template_participant("location_in_campus", participant)}",
+            f"{template_participant("logtime", participant)}",
             parse_mode="HTML",
             reply_markup=main_menu(),
         )
@@ -97,7 +100,8 @@ async def send_info_participant(status, message: Message, participant: Participa
             f"{template_participant("placeInTheTribe", participant)}"
             f"{template_participant("peerReviewPoints", participant)}"
             f"{template_participant("codeReviewPoints", participant)}"
-            f"{template_participant("location_in_campus", participant)}",
+            f"{template_participant("location_in_campus", participant)}"
+            f"{template_participant("logtime", participant)}",
             parse_mode="HTML",
             reply_markup=main_menu(),
         )
@@ -114,7 +118,8 @@ async def send_info_participant(status, message: Message, participant: Participa
         f"{template_participant("placeInTheTribe", participant)}"
         f"{template_participant("peerReviewPoints", participant)}"
         f"{template_participant("codeReviewPoints", participant)}"
-        f"{template_participant("location_not_in_campus", participant)}",
+        f"{template_participant("location_not_in_campus", participant)}"
+        f"{template_participant("logtime", participant)}",
         parse_mode="HTML",
         reply_markup=main_menu(),
     )

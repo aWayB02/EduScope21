@@ -20,3 +20,4 @@ class Participant(BaseModel):
     rank: Optional[int] = None
     campus: Optional[dict] = None
     coalitionId: Optional[int] = None
+    logtime: int

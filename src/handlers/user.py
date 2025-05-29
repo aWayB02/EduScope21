@@ -5,9 +5,11 @@ from aiogram import types, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from core.participant import get_participant_info
 from .dispatcher import dp
 from .utils import send_info_participant, training_status
+from .redis_service import save_user_to_redis, get_user_from_redis
+from handlers import dispatcher
+from redis.asyncio import Redis
 
 router = Router()
 
@@ -18,8 +20,17 @@ class GetUserInput(StatesGroup):
 
 @router.message(GetUserInput.waiting_for_text)
 async def get_user_info(message: types.Message, state: FSMContext):
+    db: Redis = dispatcher.db
     login = message.text.lower()
-    data = await get_participant_info(login)
+    data = await get_user_from_redis(login, db)
+    if not data:
+        data = await save_user_to_redis(login, db)
+    if not data:
+        await message.answer(
+            "<b>К сожалению, такой пользователь не найден</b> :(",
+            reply_markup=main_menu(),
+        )
+        return
     await send_info_participant(training_status(data["parallelName"]), message, data)
     await state.clear()
 

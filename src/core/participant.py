@@ -2,6 +2,7 @@ import aiohttp
 import aiohttp.client_exceptions
 from dotenv import load_dotenv
 import os
+from math import ceil
 
 load_dotenv()
 
@@ -23,9 +24,11 @@ async def get_participant_info(login) -> dict:
                 coalition_info = await get_coalition_info(login)
                 participant_coins = await get_participant_coins(login)
                 participant_workstation = await get_participant_workstation(login)
+                participant_logtime = await get_participant_logtime(login)
                 ans.update(coalition_info)
                 ans.update(participant_coins)
                 ans.update(participant_workstation)
+                ans.update({"logtime": participant_logtime})
                 return ans
 
             # записываем лог
@@ -81,7 +84,7 @@ async def get_coalition_info(login):
 
 async def get_participant_coins(login):
     """
-    returns participants' points
+    returns participants points
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
@@ -98,3 +101,20 @@ async def get_participant_coins(login):
 
                 ans = await responce.json()
                 return ans
+
+
+async def get_participant_logtime(login):
+
+    headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
+    url = (
+        "https://edu-api.21-school.ru/services/21-school/api/v1/participants/"
+        + login
+        + "/logtime"
+    )
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as responce:
+
+            if responce.status == 200:
+                ans = await responce.text()
+                return ceil(float(ans))
