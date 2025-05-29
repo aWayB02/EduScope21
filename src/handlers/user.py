@@ -6,10 +6,11 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from .dispatcher import dp
-from .utils import send_info_participant, training_status
+from .utils import send_info_participant, training_status, not_found_user
 from .redis_service import save_user_to_redis, get_user_from_redis
 from handlers import dispatcher
 from redis.asyncio import Redis
+from core.events import get_events
 
 router = Router()
 
@@ -26,19 +27,19 @@ async def get_user_info(message: types.Message, state: FSMContext):
     if not data:
         data = await save_user_to_redis(login, db)
     if not data:
-        await message.answer(
-            "<b>К сожалению, такой пользователь не найден</b> :(",
-            reply_markup=main_menu(),
+        await not_found_user(message)
+    else:
+        await send_info_participant(
+            training_status(data["parallelName"]), message, data
         )
-        return
-    await send_info_participant(training_status(data["parallelName"]), message, data)
     await state.clear()
 
 
 @router.message(F.text)
 async def is_no_valid_input(message: Message):
     await message.answer_sticker(
-        "CAACAgIAAxkBAAIBmmgzbIEOenYtcwzYNbCPPI35g_RZAAIldQACtRZ4STRZWNqBgPpLNgQ"
+        "CAACAgIAAxkBAAIBmmgzbIEOenYtcwzYNbCPPI35g_RZAAIldQACtRZ4STRZWNqBgPpLNgQ",
+        reply_markup=main_menu(),
     )
 
 
@@ -46,6 +47,20 @@ async def is_no_valid_input(message: Message):
 async def get_name_user(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("Пожалуйста, введите имя пира:")
     await state.set_state(GetUserInput.waiting_for_text)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "events")
+async def get_name_user(callback: CallbackQuery):
+    text = await get_events()
+    if not text:
+        await callback.message.answer(
+            "В ближайшее время мероприятий нет. Следите за обновлениями!",
+            reply_markup=main_menu(),
+        )
+    else:
+        await callback.message.answer(text, parse_mode="HTML", reply_markup=main_menu())
+
     await callback.answer()
 
 

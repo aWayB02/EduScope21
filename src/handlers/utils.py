@@ -23,6 +23,14 @@ tribes = {
 }
 
 
+async def not_found_user(message: Message):
+    await message.answer(
+        "<b>К сожалению, такой пользователь не найден :(</b>",
+        reply_markup=main_menu(),
+        parse_mode="HTML",
+    )
+
+
 @validate_call
 def template_participant(key, personality: Participant):
 
