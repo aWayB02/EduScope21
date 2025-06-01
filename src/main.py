@@ -1,8 +1,8 @@
 import asyncio
 from handlers import dispatcher
 from handlers import start
-from handlers import cluster
-from handlers import user
+from handlers.clusters import cluster
+from handlers.users import user
 import redis.asyncio as redis
 
 

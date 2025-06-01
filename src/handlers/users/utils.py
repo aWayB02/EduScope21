@@ -1,6 +1,6 @@
 from aiogram.types import Message
-from handlers.buttons import main_menu
-from .shemas import Participant
+from buttons.b import main_menu
+from schemes.scheme import Participant
 from pydantic import validate_call
 
 
