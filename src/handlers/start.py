@@ -2,7 +2,7 @@ from aiogram import Router
 from .dispatcher import dp
 from aiogram import types
 from aiogram.filters.command import Command
-from handlers.buttons import main_menu
+from buttons.b import main_menu
 
 router = Router()
 

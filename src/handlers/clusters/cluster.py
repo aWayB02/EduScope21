@@ -1,12 +1,11 @@
 from aiogram import Router
-from .dispatcher import dp
+from handlers.dispatcher import dp
 from aiogram import F
 from aiogram.types import (
     CallbackQuery,
 )
-from handlers.buttons import cluster
+from buttons.b import cluster, main_menu
 from core.clusters import get_cluster
-from handlers.buttons import main_menu
 
 router = Router()
 
