@@ -56,7 +56,6 @@ def template_participant(key, personality: Participant):
 
 @validate_call
 async def send_info_participant(status, message: Message, participant: Participant):
-
     if status:  # survival camp
         if participant.active is not None:  # not in campus
             await message.answer(

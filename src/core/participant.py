@@ -2,8 +2,14 @@ import aiohttp
 from dotenv import load_dotenv
 import os
 from math import ceil
+import logging
+from .config import ENDPOINTS
 
-load_dotenv()
+load_dotenv("keys.env")
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 async def get_participant_info(login) -> dict:
@@ -12,7 +18,7 @@ async def get_participant_info(login) -> dict:
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}"
+    url = ENDPOINTS["baseInfoParticipant"](login)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -23,16 +29,18 @@ async def get_participant_info(login) -> dict:
                 coalition_info = await get_coalition_info(login)
                 participant_coins = await get_participant_coins(login)
                 participant_workstation = await get_participant_workstation(login)
-                participant_logtime = await get_participant_logtime(login)
+                participant_logtime = {"logtime": await get_participant_logtime(login)}
                 participant_feedback = await get_participant_feedback(login)
-                ans.update(coalition_info)
-                ans.update(participant_coins)
-                ans.update(participant_workstation)
-                ans.update({"logtime": participant_logtime})
-                ans.update(participant_feedback)
+                data = [
+                    coalition_info,
+                    participant_coins,
+                    participant_workstation,
+                    participant_logtime,
+                    participant_feedback,
+                ]
+                for d in data:
+                    ans.update(d)
                 return ans
-
-            # записываем лог
 
 
 async def get_participant_workstation(login) -> dict:
@@ -41,28 +49,26 @@ async def get_participant_workstation(login) -> dict:
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/workstation"
+    url = ENDPOINTS["participantWorkstation"](login)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
 
             if responce.status == 200:
-                if "application/json " != responce.headers.get("content-type", None):
+                if "application/json" != responce.headers.get("content-type", None):
                     return {"active": False}
 
                 ans = await responce.json()
                 return ans
 
-            # записываем лог
 
-
-async def get_coalition_info(login):
+async def get_coalition_info(login) -> dict:
     """
     returns coalition info about participant
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/coalition"
+    url = ENDPOINTS["coalitionInfo"](login)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -72,18 +78,16 @@ async def get_coalition_info(login):
                 ans = await responce.json()
                 return ans
 
-            # записываем лог
-
             return {}
 
 
-async def get_participant_coins(login):
+async def get_participant_coins(login) -> dict:
     """
     returns participants points
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/points"
+    url = ENDPOINTS["participantCoins"](login)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -96,10 +100,10 @@ async def get_participant_coins(login):
             return {}
 
 
-async def get_participant_logtime(login):
+async def get_participant_logtime(login) -> dict:
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/logtime"
+    url = ENDPOINTS["participantLogtime"](login)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
@@ -114,7 +118,7 @@ async def get_participant_logtime(login):
 async def get_participant_feedback(login):
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = f"https://edu-api.21-school.ru/services/21-school/api/v1/participants/{login}/feedback"
+    url = ENDPOINTS["participantFeedback"](login)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:
