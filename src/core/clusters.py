@@ -24,5 +24,3 @@ async def get_cluster(cluster):
                         capacity = cluster_info["capacity"]
                         available = capacity - cluster_info["availableCapacity"]
                         return (capacity, cluster_info["availableCapacity"], available)
-
-            # записываем в лог

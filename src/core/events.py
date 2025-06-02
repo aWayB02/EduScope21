@@ -1,18 +1,20 @@
 import aiohttp
 from dotenv import load_dotenv
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from .config import ENDPOINTS
+from .utils import get_msk_time
 
 load_dotenv()
 
 
 async def get_events():
 
-    d = datetime.now()
-    from_date = d.strftime("%Y-%m-%dT00:00:00Z")
-    to_date = (d + timedelta(days=10)).strftime("%Y-%m-%dT00:00:00Z")
+    date = datetime.now()
+    from_date = date.strftime("%Y-%m-%dT00:00:00Z")
+    to_date = (date + timedelta(days=10)).strftime("%Y-%m-%dT00:00:00Z")
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = "https://edu-api.21-school.ru/services/21-school/api/v1/events"
+    url = ENDPOINTS["events"]
     params = {"from": from_date, "to": to_date, "limit": 4}
 
     async with aiohttp.ClientSession() as session:
@@ -24,12 +26,6 @@ async def get_events():
 
                 if len(responce["events"]) == 0:
                     return False
-
-                def get_msk_time(date: str):
-
-                    dt_utc = datetime.fromisoformat(date.replace("Z", "+00:00"))
-                    moscow_time = dt_utc.astimezone(timezone(timedelta(hours=3)))
-                    return moscow_time.strftime("%-d %B %Y года, %H:%M (МСК)")
 
                 events = []
                 for event in responce["events"]:
