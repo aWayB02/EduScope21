@@ -1,8 +1,9 @@
 import aiohttp
 from dotenv import load_dotenv
 import os
+from .config import ENDPOINTS
 
-load_dotenv()
+load_dotenv("keys.env")
 
 
 async def get_cluster(cluster):
@@ -10,11 +11,7 @@ async def get_cluster(cluster):
     returns information about capacity cluster
     """
 
-    url = (
-        "https://edu-api.21-school.ru/services/21-school/api/v1/campuses/"
-        + os.getenv("ID")
-        + "/clusters"
-    )
+    url = ENDPOINTS["cluster"]
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
 
     async with aiohttp.ClientSession() as session:
