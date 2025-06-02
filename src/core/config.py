@@ -16,4 +16,5 @@ ENDPOINTS = {
     "participantCoins": lambda login: f"{API_BASE_URL_PARTICIPANT}{login}/points",
     "participantLogtime": lambda login: f"{API_BASE_URL_PARTICIPANT}{login}/logtime",
     "participantFeedback": lambda login: f"{API_BASE_URL_PARTICIPANT}{login}/feedback",
+    "events": f"{API_BASE_URL}/events",
 }

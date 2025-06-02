@@ -2,130 +2,195 @@ import aiohttp
 from dotenv import load_dotenv
 import os
 from math import ceil
-import logging
 from .config import ENDPOINTS
 
 load_dotenv("keys.env")
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
-async def get_participant_info(login) -> dict:
+async def get_participant_info(login: str) -> dict:
     """
-    returns information about the users
+    Collects and returns full information about a participant,
+    including data from multiple API sources.
+
+    Args:
+        login (str): student's login
+
+    Returns:
+        dict: Aggregated JSON data about the participant
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = ENDPOINTS["baseInfoParticipant"](login)
+    url = ENDPOINTS["baseInfoParticipant"](
+        login
+    )  # endpoint school 21 API baseInfoParticipant
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as responce:
+        async with session.get(url, headers=headers) as response:
 
-            if responce.status == 200:
+            if response.status == 200:
 
-                ans = await responce.json()
-                coalition_info = await get_coalition_info(login)
-                participant_coins = await get_participant_coins(login)
-                participant_workstation = await get_participant_workstation(login)
-                participant_logtime = {"logtime": await get_participant_logtime(login)}
-                participant_feedback = await get_participant_feedback(login)
-                data = [
-                    coalition_info,
-                    participant_coins,
-                    participant_workstation,
-                    participant_logtime,
-                    participant_feedback,
+                full_info_student: dict = await response.json()
+                # engaged other information about student
+                other_info_student = [
+                    await get_coalition_info(login),
+                    await get_participant_coins(login),
+                    await get_participant_workstation(login),
+                    {"logtime": await get_participant_logtime(login)},
+                    await get_participant_feedback(login),
                 ]
-                for d in data:
-                    ans.update(d)
-                return ans
+                # associations all information
+                for data in other_info_student:
+                    full_info_student.update(data)
+                return full_info_student
 
 
-async def get_participant_workstation(login) -> dict:
+async def get_participant_workstation(login: str) -> dict:
     """
-    returns information about the participant's of workstation
+    Checks whether the student is currenly on campus.
+
+    if student is currently on campus, the API returns:
+        Response body:
+        {
+            "clusterId": 36756,
+            "clusterName": "name",
+            "row": "n",
+            "number": 4
+        }
+    if not, API responce will not be JSON (content-type != "application/json"),
+    indicating that the student is not currently on campus
+
+    Args:
+        login (str): student's login
+
+    Returns:
+        dict: returns workstation location data if active, or {'active': False} if not
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = ENDPOINTS["participantWorkstation"](login)
+    url = ENDPOINTS["participantWorkstation"](
+        login
+    )  # endpoint school 21 API participant_workstation
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as responce:
+        async with session.get(url, headers=headers) as response:
 
-            if responce.status == 200:
-                if "application/json" != responce.headers.get("content-type", None):
+            if response.status == 200:
+                if "application/json" != response.headers.get("content-type", None):
                     return {"active": False}
 
-                ans = await responce.json()
+                ans = await response.json()
                 return ans
 
 
-async def get_coalition_info(login) -> dict:
+async def get_coalition_info(login: str) -> dict:
     """
-    returns coalition info about participant
+    Returns information about coalition, for examlpte, the API returns:
+        {
+            "coalitionId": 454,
+            "name": "Erzi",
+            "rank": 19
+        }
+    Here 'rank', is the student's place within the coalition
+
+    if login is not found, the API return status 404, a response body like:
+        {
+            "status": 404,
+            "exceptionUUID": "iBNiXKZmh7",
+            "code": "NOT_FOUND",
+            "message": "Not found user by login {login}"
+        }
+
+    Args:
+        login (str): student's login
+
+    Returns:
+        dict: Coalition information if found, otherwise an empty dictionary
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = ENDPOINTS["coalitionInfo"](login)
+    url = ENDPOINTS["coalitionInfo"](login)  # endpoint school 21 API coalition
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as responce:
+        async with session.get(url, headers=headers) as response:
 
-            if responce.status == 200:
+            if response.status == 200:
 
-                ans = await responce.json()
+                ans = await response.json()
+                return ans
+
+            return {}  # other errors
+
+
+async def get_participant_coins(login: str) -> dict:
+    """
+    Returns information about the student's earned points and coints
+    For example, the API returns:
+
+        {
+            "peerReviewPoints": 5,
+            "codeReviewPoints": 5,
+            "coins": 110
+        }
+
+    if login is not found, the API returns status 404, a response body like:
+
+        {
+            "status": 404,
+            "exceptionUUID": "bkFpLVoJJV",
+            "code": "NOT_FOUND",
+            "message": "Not found user by login {login}"
+        }
+
+    Args:
+        login (str): student's login
+
+    Returns:
+        dict: A dictionary with coin and point information if found, otherwise an anpty dictionary
+    """
+
+    headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
+    url = ENDPOINTS["participantCoins"](login)  # endpoint school 21 API
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+
+            if response.status == 200:
+
+                ans = await response.json()
                 return ans
 
             return {}
 
 
-async def get_participant_coins(login) -> dict:
+async def get_participant_logtime(login: str) -> dict:
     """
-    returns participants points
+    Returns information about how long does a student work at a workstation
     """
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = ENDPOINTS["participantCoins"](login)
+    url = ENDPOINTS["participantLogtime"](login)  # endpoint school 21 API
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as responce:
+        async with session.get(url, headers=headers) as response:
 
-            if responce.status == 200:
-
-                ans = await responce.json()
-                return ans
-
-            return {}
-
-
-async def get_participant_logtime(login) -> dict:
-
-    headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = ENDPOINTS["participantLogtime"](login)
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as responce:
-
-            if responce.status == 200:
-                ans = await responce.text()
+            if response.status == 200:
+                ans = await response.text()
                 return ceil(float(ans))
 
             return {}
 
 
-async def get_participant_feedback(login):
+async def get_participant_feedback(login: str):
 
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
-    url = ENDPOINTS["participantFeedback"](login)
+    url = ENDPOINTS["participantFeedback"](login)  # endpoint school 21 API
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as responce:
+        async with session.get(url, headers=headers) as response:
 
-            if responce.status == 200:
-                responce = await responce.json()
+            if response.status == 200:
+                response = await response.json()
 
-                return responce
+                return response
 
             return {}

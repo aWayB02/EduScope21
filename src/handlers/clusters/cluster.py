@@ -26,9 +26,9 @@ async def get_open_cluster(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("cluster:"))
 async def get_cluster_info(callback: CallbackQuery):
-    name = callback.data.split(":")[-1]
-    data = await get_cluster(names_clusters[name][0])
-    total_places, free_places, occupied_places = data
+    name = callback.data.split(":")[-1]  # разделить логику на слои
+    data = await get_cluster(names_clusters[name][0])  # разделить логику на слои
+    total_places, free_places, occupied_places = data  # разделить логику на слои
     await callback.message.answer(
         f"Кластер: <b>{names_clusters[name][0]} | Этаж: {names_clusters[name][1]}</b>\n"
         f"Рабочих станций всего: <b>{total_places} 🟢</b>\n"
