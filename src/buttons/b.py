@@ -10,7 +10,7 @@ def main_menu():
             [InlineKeyboardButton(text="Кластеры 🖥️", callback_data="open_cluster")],
             [
                 InlineKeyboardButton(
-                    text="Найти пользователя 🔍", callback_data="get_user"
+                    text="Найти пользователя 🔍", callback_data="get_user_name"
                 )
             ],
             [InlineKeyboardButton(text="Мероприятия 📅", callback_data="events")],
