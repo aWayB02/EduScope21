@@ -11,8 +11,8 @@ async def get_cluster(cluster):
     returns information about capacity cluster
     """
 
-    url = ENDPOINTS["cluster"]
     headers = {"Authorization": f"Bearer {os.getenv("JWT")}"}
+    url = ENDPOINTS["cluster"]
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as responce:

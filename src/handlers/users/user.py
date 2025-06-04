@@ -11,6 +11,8 @@ from redis_service.cache import save_user_to_redis, get_user_from_redis
 from handlers import dispatcher
 from redis.asyncio import Redis
 from core.events import get_events
+import logging
+
 
 router = Router()
 
@@ -27,6 +29,7 @@ async def get_user_info(message: types.Message, state: FSMContext):
     if not data:
         data = await save_user_to_redis(login, db)
     if not data:
+        # logging.warning("❌ Пользователь '%s' не найден. Ответ от API: 404", login)
         await not_found_user(message)
     else:
         await send_info_participant(
@@ -43,24 +46,10 @@ async def is_no_valid_input(message: Message):
     )
 
 
-@router.callback_query(F.data == "get_user")
+@router.callback_query(F.data == "get_user_name")
 async def get_name_user(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("Пожалуйста, введите имя пира:")
     await state.set_state(GetUserInput.waiting_for_text)
-    await callback.answer()
-
-
-@router.callback_query(F.data == "events")
-async def events(callback: CallbackQuery):
-    text = await get_events()
-    if not text:
-        await callback.message.answer(
-            "В ближайшее время мероприятий нет. Следите за обновлениями!",
-            reply_markup=main_menu(),
-        )
-    else:
-        await callback.message.answer(text, parse_mode="HTML", reply_markup=main_menu())
-
     await callback.answer()
 
 

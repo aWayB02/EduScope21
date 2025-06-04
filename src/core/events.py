@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from .config import ENDPOINTS
 from .utils import get_msk_time
 
-load_dotenv()
+load_dotenv("keys.env")
 
 
 async def get_events():

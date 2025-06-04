@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from math import ceil
 from .config import ENDPOINTS
+import logging
 
 load_dotenv("keys.env")
 
@@ -39,8 +40,14 @@ async def get_participant_info(login: str) -> dict:
                     await get_participant_feedback(login),
                 ]
                 # associations all information
+
                 for data in other_info_student:
                     full_info_student.update(data)
+
+                # logging.info(
+                # "✅ Пользователь '%s' найден. Сбор данных завершён успешно.",
+                # full_info_student["login"],
+                # )
                 return full_info_student
 
 
@@ -81,6 +88,10 @@ async def get_participant_workstation(login: str) -> dict:
                 ans = await response.json()
                 return ans
 
+            # logging.WARNING(
+            #     f"WARNING: response status {response.status}, headers - {response.headers}"
+            # )
+
 
 async def get_coalition_info(login: str) -> dict:
     """
@@ -118,6 +129,9 @@ async def get_coalition_info(login: str) -> dict:
                 ans = await response.json()
                 return ans
 
+            # logging.WARNING(
+            #     f"WARNING: response status {response.status}, headers - {response.headers}"
+            # )
             return {}  # other errors
 
 
@@ -159,6 +173,9 @@ async def get_participant_coins(login: str) -> dict:
                 ans = await response.json()
                 return ans
 
+            # logging.WARNING(
+            #     f"WARNING: response status {response.status}, headers - {response.headers}"
+            # )
             return {}
 
 
@@ -177,6 +194,9 @@ async def get_participant_logtime(login: str) -> dict:
                 ans = await response.text()
                 return ceil(float(ans))
 
+            # logging.WARNING(
+            #     f"WARNING: response status {response.status}, headers - {response.headers}"
+            # )
             return {}
 
 
@@ -193,4 +213,7 @@ async def get_participant_feedback(login: str):
 
                 return response
 
+            # logging.WARNING(
+            #     f"WARNING: response status {response.status}, headers - {response.headers}"
+            # )
             return {}
